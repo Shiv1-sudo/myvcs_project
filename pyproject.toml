@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myvcs"
+version = "0.1.0"
+description = "A Git-like version control system written in Python for learning"
+requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0"
+]
+
+[project.scripts]
+myvcs = "myvcs.cli.command_handler:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

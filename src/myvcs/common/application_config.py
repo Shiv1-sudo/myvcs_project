@@ -1,0 +1,141 @@
+"""Application configuration management."""
+
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from myvcs.common.application_constants import (
+    APPLICATION_CONFIG_FILE_NAME,
+    CONFIGURATION_DIRECTORY_NAME,
+    find_project_root,
+)
+from myvcs.common.application_exceptions import ConfigurationError
+
+
+class ApplicationConfig:
+    """Provides access to application configuration."""
+
+    def __init__(self, values: dict[str, Any]):
+        self._values = values
+
+    def get(
+        self,
+        *keys: str,
+        default: Any = None,
+    ) -> Any:
+        """Retrieve a nested configuration value."""
+
+        current_value: Any = self._values
+
+        try:
+            for key in keys:
+                current_value = current_value[key]
+
+            return current_value
+
+        except (KeyError, TypeError) as exc:
+            if default is not None:
+                return default
+
+            key_path = ".".join(keys)
+
+            raise ConfigurationError(
+                f"Configuration value not found: {key_path}"
+            ) from exc
+
+    def require(
+        self,
+        *keys: str,
+    ) -> Any:
+        """Retrieve a mandatory configuration value."""
+
+        return self.get(*keys)
+
+
+'''def locate_configuration_file() -> Path:
+    """Locate application configuration."""
+
+    project_root = find_project_root(
+        Path.cwd()
+    )
+
+    return (
+        project_root
+        / CONFIGURATION_DIRECTORY_NAME
+        / APPLICATION_CONFIG_FILE_NAME
+    )'''
+
+'''def locate_configuration_file() -> Path:
+    """Locate the application configuration file.
+
+    The configuration belongs to the MyVCS application, not to the
+    repository currently being managed.
+
+    Therefore, configuration discovery must not depend on Path.cwd().
+    """
+
+    project_root = find_project_root(
+        Path(__file__).resolve()
+    )
+
+    configuration_file = (
+        project_root
+        / CONFIGURATION_DIRECTORY_NAME
+        / APPLICATION_CONFIG_FILE_NAME
+    )
+
+    return configuration_file'''
+def locate_configuration_file() -> Path:
+    """Locate application configuration.
+
+    Configuration belongs to the MyVCS application and must therefore
+    be resolved from the application source location, not from the
+    current working directory.
+
+    The current working directory may be a repository managed by MyVCS.
+    """
+
+    application_source_directory = Path(__file__).resolve()
+
+    project_root = find_project_root(
+        application_source_directory
+    )
+
+    return (
+        project_root
+        / CONFIGURATION_DIRECTORY_NAME
+        / APPLICATION_CONFIG_FILE_NAME
+    )
+
+
+def load_configuration() -> ApplicationConfig:
+    """Load configuration from YAML."""
+
+    configuration_file = locate_configuration_file()    
+
+    try:
+        with configuration_file.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+            values = yaml.safe_load(file)
+
+        if not isinstance(values, dict):
+            raise ConfigurationError(
+                "Application configuration must be a YAML mapping."
+            )
+
+        return ApplicationConfig(values)
+
+    except FileNotFoundError as exc:
+        raise ConfigurationError(
+            f"Configuration file not found: "
+            f"{configuration_file}"
+        ) from exc
+
+    except yaml.YAMLError as exc:
+        raise ConfigurationError(
+            f"Invalid YAML configuration: "
+            f"{configuration_file}"
+        ) from exc

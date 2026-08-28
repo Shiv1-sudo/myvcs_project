@@ -1,0 +1,7 @@
+"""MyVCS module entry point."""
+
+from myvcs.cli.command_handler import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
