@@ -1,0 +1,28 @@
+stages:
+  - validate
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - pip install -e .
+  - pip install pytest
+
+validate:
+  stage: validate
+  image: python:3.12
+  script:
+    - python -m compileall src
+
+test:
+  stage: test
+  image: python:3.12
+  script:
+    - pytest -v
