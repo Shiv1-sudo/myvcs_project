@@ -14,6 +14,7 @@ before_script:
   - pip install --upgrade pip
   - pip install -e .
   - pip install pytest
+  - pip install ruff
 
 validate:
   stage: validate
@@ -26,3 +27,10 @@ test:
   image: python:3.12
   script:
     - pytest -v
+
+lint:
+  stage: validate
+  image: python:3.12
+  script:
+    - pip install ruff
+    - ruff check src tests
