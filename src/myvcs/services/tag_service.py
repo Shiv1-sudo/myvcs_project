@@ -4,7 +4,6 @@ from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_logging import get_logger
 from myvcs.references.reference_manager import ReferenceManager
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -30,10 +29,7 @@ class TagService:
     ) -> None:
         """Create lightweight tag."""
 
-        commit_id = (
-            self.references
-            .get_head_commit()
-        )
+        commit_id = self.references.get_head_commit()
 
         self.references.create_tag(
             tag_name,

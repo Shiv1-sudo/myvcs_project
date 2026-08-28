@@ -8,7 +8,6 @@ from myvcs.common.application_logging import get_logger
 from myvcs.remote.local_remote import LocalRemote
 from myvcs.repository.repository_manager import RepositoryManager
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -45,9 +44,7 @@ class CloneService:
 
             remote = LocalRemote(source)
 
-            remote.fetch(
-                destination
-            )
+            remote.fetch(destination)
 
             LOGGER.info(
                 "Repository cloned: %s",
@@ -55,10 +52,6 @@ class CloneService:
             )
 
         except Exception as exc:
-            LOGGER.exception(
-                "Clone failed."
-            )
+            LOGGER.exception("Clone failed.")
 
-            raise RepositoryError(
-                "Unable to clone repository."
-            ) from exc
+            raise RepositoryError("Unable to clone repository.") from exc

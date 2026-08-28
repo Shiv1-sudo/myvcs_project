@@ -37,16 +37,10 @@ def test_blob_is_stored(
         configuration=configuration,
     )
 
-    object_id = object_store.write(
-        blob
-    )
+    object_id = object_store.write(blob)
 
-    assert object_store.exists(
-        object_id
-    )
+    assert object_store.exists(object_id)
 
-    stored_data = object_store.read(
-        object_id
-    )
+    stored_data = object_store.read(object_id)
 
     assert stored_data == blob.serialize()

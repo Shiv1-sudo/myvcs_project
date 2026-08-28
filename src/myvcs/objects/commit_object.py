@@ -1,6 +1,6 @@
 """Commit object implementation."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.objects.vcs_object import VCSObject
@@ -22,13 +22,9 @@ class CommitObject(VCSObject):
         ]
 
         if parent_id:
-            lines.append(
-                f"parent {parent_id}"
-            )
+            lines.append(f"parent {parent_id}")
 
-        timestamp = datetime.now(
-            timezone.utc
-        ).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
 
         lines.extend(
             [
@@ -39,9 +35,7 @@ class CommitObject(VCSObject):
             ]
         )
 
-        data = "\n".join(
-            lines
-        ).encode("utf-8")
+        data = "\n".join(lines).encode("utf-8")
 
         object_type = configuration.require(
             "objects",

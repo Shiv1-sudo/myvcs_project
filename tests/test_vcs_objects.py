@@ -40,9 +40,7 @@ def test_tree_object():
     configuration = create_configuration()
 
     tree = TreeObject(
-        entries={
-            "hello.txt": "abc123"
-        },
+        entries={"hello.txt": "abc123"},
         configuration=configuration,
     )
 

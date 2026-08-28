@@ -53,9 +53,4 @@ def test_repository_initialization(
     assert repository.tags_directory.exists()
     assert repository.head_file.exists()
 
-    assert (
-        repository.head_file.read_text(
-            encoding="utf-8"
-        )
-        == "ref: refs/heads/main\n"
-    )
+    assert repository.head_file.read_text(encoding="utf-8") == "ref: refs/heads/main\n"

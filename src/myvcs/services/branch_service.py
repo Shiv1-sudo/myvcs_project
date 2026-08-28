@@ -5,7 +5,6 @@ from myvcs.common.application_exceptions import ReferenceError
 from myvcs.common.application_logging import get_logger
 from myvcs.references.reference_manager import ReferenceManager
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -32,12 +31,8 @@ class BranchService:
             return self.reference_manager.list_branches()
 
         except Exception as exc:
-            LOGGER.exception(
-                "Unable to list branches."
-            )
-            raise ReferenceError(
-                "Unable to list branches."
-            ) from exc
+            LOGGER.exception("Unable to list branches.")
+            raise ReferenceError("Unable to list branches.") from exc
 
     def create_branch(
         self,
@@ -46,10 +41,7 @@ class BranchService:
         """Create branch at HEAD."""
 
         try:
-            commit_id = (
-                self.reference_manager
-                .get_head_commit()
-            )
+            commit_id = self.reference_manager.get_head_commit()
 
             self.reference_manager.create_branch(
                 branch_name,
@@ -62,9 +54,5 @@ class BranchService:
             )
 
         except Exception as exc:
-            LOGGER.exception(
-                "Unable to create branch."
-            )
-            raise ReferenceError(
-                "Unable to create branch."
-            ) from exc
+            LOGGER.exception("Unable to create branch.")
+            raise ReferenceError("Unable to create branch.") from exc

@@ -5,10 +5,9 @@ from pathlib import Path
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_logging import get_logger
 from myvcs.objects.blob_object import BlobObject
-from myvcs.repository.object_store import ObjectStore
 from myvcs.references.reference_manager import ReferenceManager
+from myvcs.repository.object_store import ObjectStore
 from myvcs.staging.staging_index import StagingIndex
-
 
 LOGGER = get_logger(__name__)
 
@@ -44,18 +43,14 @@ class StatusService:
 
         result: set[str] = set()
 
-        metadata_directory = (
-            self.repository.metadata_directory
-        )
+        metadata_directory = self.repository.metadata_directory
 
         excluded_directories = {
             ".pytest_cache",
             "__pycache__",
         }
 
-        for path in (
-            self.repository.working_directory.rglob("*")
-        ):
+        for path in self.repository.working_directory.rglob("*"):
             if not path.is_file():
                 continue
 
@@ -63,14 +58,11 @@ class StatusService:
                 continue
 
             if any(
-                directory.name in excluded_directories
-                for directory in path.parents
+                directory.name in excluded_directories for directory in path.parents
             ):
                 continue
 
-            relative_path = (
-                self.repository.relative_path(path)
-            )
+            relative_path = self.repository.relative_path(path)
 
             relative_path = relative_path.replace(
                 "\\",
@@ -87,10 +79,7 @@ class StatusService:
     ) -> str:
         """Calculate the blob ID for a working-tree file."""
 
-        file_path = (
-            self.repository.working_directory
-            / Path(relative_path)
-        )
+        file_path = self.repository.working_directory / Path(relative_path)
 
         data = file_path.read_bytes()
 
@@ -107,9 +96,7 @@ class StatusService:
     ) -> bytes:
         """Read raw object data."""
 
-        return self.object_store.read(
-            object_id
-        )
+        return self.object_store.read(object_id)
 
     def _strip_object_header(
         self,
@@ -131,13 +118,9 @@ class StatusService:
     ) -> dict[str, str | None]:
         """Read commit metadata from a stored object."""
 
-        raw = self._read_object_data(
-            commit_id
-        )
+        raw = self._read_object_data(commit_id)
 
-        payload = self._strip_object_header(
-            raw
-        )
+        payload = self._strip_object_header(raw)
 
         text = payload.decode(
             "utf-8",
@@ -151,19 +134,13 @@ class StatusService:
             line = line.strip()
 
             if line.startswith("tree "):
-                tree_id = line.removeprefix(
-                    "tree "
-                ).strip()
+                tree_id = line.removeprefix("tree ").strip()
 
             elif line.startswith("parent "):
-                parent_id = line.removeprefix(
-                    "parent "
-                ).strip()
+                parent_id = line.removeprefix("parent ").strip()
 
         if not tree_id:
-            raise ValueError(
-                f"Commit {commit_id} does not contain a tree."
-            )
+            raise ValueError(f"Commit {commit_id} does not contain a tree.")
 
         return {
             "tree_id": tree_id,
@@ -177,13 +154,9 @@ class StatusService:
     ) -> dict[str, str]:
         """Read a tree recursively."""
 
-        raw = self._read_object_data(
-            tree_id
-        )
+        raw = self._read_object_data(tree_id)
 
-        payload = self._strip_object_header(
-            raw
-        )
+        payload = self._strip_object_header(raw)
 
         text = payload.decode(
             "utf-8",
@@ -223,15 +196,9 @@ class StatusService:
             #
             name, object_id, object_type = parts
 
-            relative_path = (
-                Path(prefix) / name
-                if prefix
-                else Path(name)
-            )
+            relative_path = Path(prefix) / name if prefix else Path(name)
 
-            relative_path = (
-                relative_path.as_posix()
-            )
+            relative_path = relative_path.as_posix()
 
             if object_type == tree_type:
                 result.update(
@@ -248,25 +215,19 @@ class StatusService:
     def _head_files(self) -> dict[str, str]:
         """Return files represented by HEAD."""
 
-        head_commit_id = (
-            self.reference_manager.get_head_commit()
-        )
+        head_commit_id = self.reference_manager.get_head_commit()
 
         if not head_commit_id:
             return {}
 
-        commit = self._read_commit(
-            head_commit_id
-        )
+        commit = self._read_commit(head_commit_id)
 
         tree_id = commit["tree_id"]
 
         if not tree_id:
             return {}
 
-        return self._read_tree_entries(
-            tree_id
-        )
+        return self._read_tree_entries(tree_id)
 
     def get_status(self) -> dict[str, list[str]]:
         """Calculate repository status."""
@@ -291,18 +252,12 @@ class StatusService:
             staged_changes: set[str] = set()
 
             for relative_path in staged_files:
-                staged_id = staged[
-                    relative_path
-                ]
+                staged_id = staged[relative_path]
 
-                head_id = head_files.get(
-                    relative_path
-                )
+                head_id = head_files.get(relative_path)
 
                 if staged_id != head_id:
-                    staged_changes.add(
-                        relative_path
-                    )
+                    staged_changes.add(relative_path)
 
             # -------------------------------------------------
             # ADDED
@@ -310,9 +265,7 @@ class StatusService:
             # Files staged that do not exist in HEAD.
             # -------------------------------------------------
 
-            added = sorted(
-                staged_files - head_set
-            )
+            added = sorted(staged_files - head_set)
 
             # -------------------------------------------------
             # WORKING-TREE MODIFICATIONS
@@ -324,46 +277,26 @@ class StatusService:
             modified: set[str] = set()
 
             # Files that are staged and then changed again.
-            for relative_path in (
-                working_set & staged_files
-            ):
-                current_id = (
-                    self._working_blob_id(
-                        relative_path
-                    )
-                )
+            for relative_path in working_set & staged_files:
+                current_id = self._working_blob_id(relative_path)
 
-                staged_id = staged[
-                    relative_path
-                ]
+                staged_id = staged[relative_path]
 
                 if current_id != staged_id:
-                    modified.add(
-                        relative_path
-                    )
+                    modified.add(relative_path)
 
             # Files tracked by HEAD but not staged,
             # whose working-tree content differs from HEAD.
-            for relative_path in (
-                working_set & head_set
-            ):
+            for relative_path in working_set & head_set:
                 if relative_path in staged_files:
                     continue
 
-                current_id = (
-                    self._working_blob_id(
-                        relative_path
-                    )
-                )
+                current_id = self._working_blob_id(relative_path)
 
-                head_id = head_files[
-                    relative_path
-                ]
+                head_id = head_files[relative_path]
 
                 if current_id != head_id:
-                    modified.add(
-                        relative_path
-                    )
+                    modified.add(relative_path)
 
             # -------------------------------------------------
             # DELETED
@@ -372,9 +305,7 @@ class StatusService:
             # present in the working tree.
             # -------------------------------------------------
 
-            deleted = sorted(
-                head_set - working_set
-            )
+            deleted = sorted(head_set - working_set)
 
             # -------------------------------------------------
             # UNTRACKED
@@ -383,20 +314,12 @@ class StatusService:
             # working tree, is not in HEAD, and is not staged.
             # -------------------------------------------------
 
-            untracked = sorted(
-                working_set
-                - head_set
-                - staged_files
-            )
+            untracked = sorted(working_set - head_set - staged_files)
 
             result = {
-                "staged": sorted(
-                    staged_changes
-                ),
+                "staged": sorted(staged_changes),
                 "added": added,
-                "modified": sorted(
-                    modified
-                ),
+                "modified": sorted(modified),
                 "deleted": deleted,
                 "untracked": untracked,
             }
@@ -415,7 +338,5 @@ class StatusService:
             return result
 
         except Exception:
-            LOGGER.exception(
-                "Unable to calculate repository status."
-            )
+            LOGGER.exception("Unable to calculate repository status.")
             raise

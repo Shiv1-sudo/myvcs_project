@@ -7,7 +7,6 @@ from myvcs.common.application_exceptions import ObjectError
 from myvcs.common.application_logging import get_logger
 from myvcs.objects.vcs_object import VCSObject
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -66,22 +65,14 @@ class TreeObject(VCSObject):
                 self.entries,
                 key=lambda item: item.name,
             ):
-                lines.append(
-                    f"{entry.name} "
-                    f"{entry.object_id} "
-                    f"{entry.object_type}"
-                )
+                lines.append(f"{entry.name} {entry.object_id} {entry.object_type}")
 
             return "\n".join(lines).encode("utf-8")
 
         except Exception as exc:
-            LOGGER.exception(
-                "Unable to serialize tree entries."
-            )
+            LOGGER.exception("Unable to serialize tree entries.")
 
-            raise ObjectError(
-                "Unable to serialize tree entries."
-            ) from exc
+            raise ObjectError("Unable to serialize tree entries.") from exc
 
     def serialize(self) -> bytes:
         """Serialize the complete tree object."""
@@ -90,13 +81,9 @@ class TreeObject(VCSObject):
             return super().serialize()
 
         except Exception as exc:
-            LOGGER.exception(
-                "Unable to serialize tree object."
-            )
+            LOGGER.exception("Unable to serialize tree object.")
 
-            raise ObjectError(
-                "Unable to serialize tree object."
-            ) from exc
+            raise ObjectError("Unable to serialize tree object.") from exc
 
     @classmethod
     def deserialize(
@@ -126,26 +113,18 @@ class TreeObject(VCSObject):
                 )
 
                 if len(parts) != 3:
-                    raise ObjectError(
-                        f"Invalid tree entry: {line}"
-                    )
+                    raise ObjectError(f"Invalid tree entry: {line}")
 
                 name, object_id, object_type = parts
 
                 if not name:
-                    raise ObjectError(
-                        "Tree entry name cannot be empty."
-                    )
+                    raise ObjectError("Tree entry name cannot be empty.")
 
                 if not object_id:
-                    raise ObjectError(
-                        "Tree entry object ID cannot be empty."
-                    )
+                    raise ObjectError("Tree entry object ID cannot be empty.")
 
                 if not object_type:
-                    raise ObjectError(
-                        "Tree entry object type cannot be empty."
-                    )
+                    raise ObjectError("Tree entry object type cannot be empty.")
 
                 entries.append(
                     TreeEntry(
@@ -164,10 +143,6 @@ class TreeObject(VCSObject):
             raise
 
         except Exception as exc:
-            LOGGER.exception(
-                "Unable to deserialize tree object."
-            )
+            LOGGER.exception("Unable to deserialize tree object.")
 
-            raise ObjectError(
-                "Unable to deserialize tree object."
-            ) from exc
+            raise ObjectError("Unable to deserialize tree object.") from exc

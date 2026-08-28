@@ -3,7 +3,6 @@
 import argparse
 import sys
 from pathlib import Path
-from datetime import datetime, timezone
 
 from myvcs.common.application_config import (
     ApplicationConfig,
@@ -24,23 +23,20 @@ from myvcs.repository.object_store import ObjectStore
 from myvcs.repository.repository_manager import (
     RepositoryManager,
 )
-
 from myvcs.services.add_service import AddService
-from myvcs.services.commit_service import CommitService
-from myvcs.services.status_service import StatusService
-from myvcs.services.diff_service import DiffService
 from myvcs.services.branch_service import BranchService
 from myvcs.services.checkout_service import CheckoutService
-from myvcs.services.merge_service import MergeService
-from myvcs.services.tag_service import TagService
-from myvcs.services.remote_service import RemoteService
 from myvcs.services.clone_service import CloneService
+from myvcs.services.commit_service import CommitService
+from myvcs.services.diff_service import DiffService
 from myvcs.services.garbage_collection_service import (
     GarbageCollectionService,
 )
-
+from myvcs.services.merge_service import MergeService
+from myvcs.services.remote_service import RemoteService
+from myvcs.services.status_service import StatusService
+from myvcs.services.tag_service import TagService
 from myvcs.storage.pack_file import PackFile
-
 
 LOGGER = get_logger(__name__)
 
@@ -50,15 +46,10 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="myvcs",
-        description=(
-            "Git-like version control system "
-            "implemented in Python."
-        ),
+        description=("Git-like version control system implemented in Python."),
     )
 
-    subparsers = parser.add_subparsers(
-        dest="command"
-    )
+    subparsers = parser.add_subparsers(dest="command")
 
     # ---------------------------------------------------------
     # init
@@ -317,10 +308,7 @@ def handle_init(
 
     repository.initialize()
 
-    print(
-        f"Initialized empty MyVCS repository in "
-        f"{repository.metadata_directory}"
-    )
+    print(f"Initialized empty MyVCS repository in {repository.metadata_directory}")
 
 
 def handle_hash_object(
@@ -332,15 +320,10 @@ def handle_hash_object(
 
     repository.require_repository()
 
-    source_path = (
-        repository.working_directory
-        / file_path
-    ).resolve()
+    source_path = (repository.working_directory / file_path).resolve()
 
     if not source_path.is_file():
-        raise MyVCSError(
-            f"File does not exist: {file_path}"
-        )
+        raise MyVCSError(f"File does not exist: {file_path}")
 
     data = source_path.read_bytes()
 
@@ -354,9 +337,7 @@ def handle_hash_object(
         configuration,
     )
 
-    object_id = object_store.write(
-        blob
-    )
+    object_id = object_store.write(blob)
 
     print(object_id)
 
@@ -375,9 +356,7 @@ def handle_cat_file(
         configuration,
     )
 
-    data = object_store.read(
-        object_id
-    )
+    data = object_store.read(object_id)
 
     print(
         data.decode(
@@ -401,76 +380,12 @@ def handle_add(
         configuration=configuration,
     )
 
-    object_id = service.add(
-        file_path
-    )
+    object_id = service.add(file_path)
 
-    print(
-        f"Staged {file_path} "
-        f"({object_id})"
-    )
+    print(f"Staged {file_path} ({object_id})")
+
 
 ##################################################old
-''''
-def handle_status(
-    repository: RepositoryManager,
-    configuration: ApplicationConfig,
-) -> None:
-    """Handle status command."""
-
-    repository.require_repository()
-
-    service = StatusService(
-        repository=repository,
-        configuration=configuration,
-    )
-
-    status = service.get_status()
-
-    reference_manager = ReferenceManager(
-        repository=repository,
-        configuration=configuration,
-    )
-
-    branch = (
-        reference_manager.current_branch()
-    )
-
-    print(
-        f"On branch {branch}"
-    )
-
-    print()
-
-    if status["staged"]:
-        print("Changes to be committed:")
-
-        for path in status["staged"]:
-            print(
-                f"  staged: {path}"
-            )
-
-        print()
-
-    if status["untracked"]:
-        print("Untracked files:")
-
-        for path in status["untracked"]:
-            print(
-                f"  untracked: {path}"
-            )
-
-        print()
-
-    if (
-        not status["staged"]
-        and not status["untracked"]
-    ):
-        print(
-            "Working tree clean."
-        )
-
-        '''''
 ############################################
 
 
@@ -496,9 +411,7 @@ def handle_status(
 
     branch = reference_manager.current_branch()
 
-    print(
-        f"On branch {branch}"
-    )
+    print(f"On branch {branch}")
 
     print()
 
@@ -506,9 +419,7 @@ def handle_status(
         print("Changes to be committed:")
 
         for path in status["staged"]:
-            print(
-                f"  staged: {path}"
-            )
+            print(f"  staged: {path}")
 
         print()
 
@@ -516,9 +427,7 @@ def handle_status(
         print("Changes not staged for commit:")
 
         for path in status["modified"]:
-            print(
-                f"  modified: {path}"
-            )
+            print(f"  modified: {path}")
 
         print()
 
@@ -526,9 +435,7 @@ def handle_status(
         print("Changes not staged for commit:")
 
         for path in status["deleted"]:
-            print(
-                f"  deleted: {path}"
-            )
+            print(f"  deleted: {path}")
 
         print()
 
@@ -536,9 +443,7 @@ def handle_status(
         print("Untracked files:")
 
         for path in status["untracked"]:
-            print(
-                f"  untracked: {path}"
-            )
+            print(f"  untracked: {path}")
 
         print()
 
@@ -548,9 +453,9 @@ def handle_status(
         and not status["deleted"]
         and not status["untracked"]
     ):
-        print(
-            "Working tree clean."
-        )
+        print("Working tree clean.")
+
+
 def handle_commit(
     repository: RepositoryManager,
     configuration: ApplicationConfig,
@@ -581,9 +486,7 @@ def handle_commit(
         author=commit_author,
     )
 
-    print(
-        f"[{commit_id}] {commit_message}"
-    )
+    print(f"[{commit_id}] {commit_message}")
 
 
 def handle_log(
@@ -604,27 +507,21 @@ def handle_log(
         configuration,
     )
 
-    commit_id = (
-        reference_manager.get_head_commit()
-    )
+    commit_id = reference_manager.get_head_commit()
 
     if not commit_id:
         print("No commits yet.")
         return
 
     while commit_id:
-        raw_object = object_store.read(
-            commit_id
-        )
+        raw_object = object_store.read(commit_id)
 
         decoded = raw_object.decode(
             "utf-8",
             errors="replace",
         )
 
-        print(
-            f"commit {commit_id}"
-        )
+        print(f"commit {commit_id}")
 
         print(decoded)
         print()
@@ -633,9 +530,7 @@ def handle_log(
 
         for line in decoded.splitlines():
             if line.startswith("parent "):
-                parent_id = line.removeprefix(
-                    "parent "
-                )
+                parent_id = line.removeprefix("parent ")
                 break
 
         commit_id = parent_id
@@ -677,13 +572,9 @@ def handle_branch(
     )
 
     if branch_name:
-        service.create_branch(
-            branch_name
-        )
+        service.create_branch(branch_name)
 
-        print(
-            f"Created branch '{branch_name}'."
-        )
+        print(f"Created branch '{branch_name}'.")
 
         return
 
@@ -692,18 +583,14 @@ def handle_branch(
         configuration=configuration,
     )
 
-    current_branch = (
-        reference_manager.current_branch()
-    )
+    current_branch = reference_manager.current_branch()
 
     branches = service.list_branches()
 
     for branch in branches:
         marker = "*" if branch == current_branch else " "
 
-        print(
-            f"{marker} {branch}"
-        )
+        print(f"{marker} {branch}")
 
 
 def handle_checkout(
@@ -720,13 +607,9 @@ def handle_checkout(
         configuration=configuration,
     )
 
-    service.checkout(
-        branch_name
-    )
+    service.checkout(branch_name)
 
-    print(
-        f"Switched to branch '{branch_name}'."
-    )
+    print(f"Switched to branch '{branch_name}'.")
 
 
 def handle_merge(
@@ -743,14 +626,9 @@ def handle_merge(
         configuration=configuration,
     )
 
-    commit_id = service.merge(
-        branch_name
-    )
+    commit_id = service.merge(branch_name)
 
-    print(
-        f"Merged '{branch_name}' "
-        f"at {commit_id}."
-    )
+    print(f"Merged '{branch_name}' at {commit_id}.")
 
 
 def handle_tag(
@@ -768,13 +646,9 @@ def handle_tag(
     )
 
     if tag_name:
-        service.create_tag(
-            tag_name
-        )
+        service.create_tag(tag_name)
 
-        print(
-            f"Created tag '{tag_name}'."
-        )
+        print(f"Created tag '{tag_name}'.")
 
         return
 
@@ -802,9 +676,7 @@ def _current_branch(
     branch = references.current_branch()
 
     if not branch:
-        raise MyVCSError(
-            "Unable to determine current branch."
-        )
+        raise MyVCSError("Unable to determine current branch.")
 
     return branch
 
@@ -819,12 +691,9 @@ def handle_push(
 
     repository.require_repository()
 
-    branch = (
-        branch_name
-        or _current_branch(
-            repository,
-            configuration,
-        )
+    branch = branch_name or _current_branch(
+        repository,
+        configuration,
     )
 
     service = RemoteService(
@@ -837,10 +706,7 @@ def handle_push(
         branch_name=branch,
     )
 
-    print(
-        f"Pushed branch '{branch}' "
-        f"to '{remote_path}'."
-    )
+    print(f"Pushed branch '{branch}' to '{remote_path}'.")
 
 
 def handle_fetch(
@@ -857,13 +723,9 @@ def handle_fetch(
         configuration=configuration,
     )
 
-    service.fetch(
-        remote_path=remote_path
-    )
+    service.fetch(remote_path=remote_path)
 
-    print(
-        f"Fetched from '{remote_path}'."
-    )
+    print(f"Fetched from '{remote_path}'.")
 
 
 def handle_pull(
@@ -876,12 +738,9 @@ def handle_pull(
 
     repository.require_repository()
 
-    branch = (
-        branch_name
-        or _current_branch(
-            repository,
-            configuration,
-        )
+    branch = branch_name or _current_branch(
+        repository,
+        configuration,
     )
 
     service = RemoteService(
@@ -894,10 +753,7 @@ def handle_pull(
         branch_name=branch,
     )
 
-    print(
-        f"Pulled branch '{branch}' "
-        f"from '{remote_path}'."
-    )
+    print(f"Pulled branch '{branch}' from '{remote_path}'.")
 
 
 def handle_clone(
@@ -916,10 +772,7 @@ def handle_clone(
         destination_path=destination_path,
     )
 
-    print(
-        f"Cloned '{remote_path}' "
-        f"to '{destination_path}'."
-    )
+    print(f"Cloned '{remote_path}' to '{destination_path}'.")
 
 
 def handle_gc(
@@ -937,10 +790,7 @@ def handle_gc(
 
     removed = service.collect()
 
-    print(
-        f"Garbage collection complete. "
-        f"Removed {removed} object(s)."
-    )
+    print(f"Garbage collection complete. Removed {removed} object(s).")
 
 
 def handle_pack(
@@ -959,19 +809,11 @@ def handle_pack(
     )
 
     if not pack_directory.is_absolute():
-        pack_directory = (
-            repository.metadata_directory
-            / pack_directory
-        )
+        pack_directory = repository.metadata_directory / pack_directory
 
     pack_name = configuration.require(
         "pack",
         "default_name",
-    )
-
-    object_store = ObjectStore(
-        repository.objects_directory,
-        configuration,
     )
 
     objects: dict[str, bytes] = {}
@@ -984,10 +826,7 @@ def handle_pack(
             if not object_file.is_file():
                 continue
 
-            object_id = (
-                directory.name
-                + object_file.name
-            )
+            object_id = directory.name + object_file.name
 
             try:
                 raw_data = object_file.read_bytes()
@@ -1001,9 +840,7 @@ def handle_pack(
             objects[object_id] = raw_data
 
     if not objects:
-        print(
-            "No objects available to pack."
-        )
+        print("No objects available to pack.")
         return
 
     pack_file = PackFile(
@@ -1016,9 +853,7 @@ def handle_pack(
         pack_name=pack_name,
     )
 
-    print(
-        f"Pack created: {created}"
-    )
+    print(f"Pack created: {created}")
 
 
 def main() -> int:
@@ -1029,9 +864,7 @@ def main() -> int:
     try:
         configuration = load_configuration()
 
-        configure_logging(
-            configuration
-        )
+        configure_logging(configuration)
 
         parser = create_parser()
 
@@ -1043,9 +876,7 @@ def main() -> int:
         )
 
         if arguments.command == "init":
-            handle_init(
-                repository
-            )
+            handle_init(repository)
 
         elif arguments.command == "hash-object":
             handle_hash_object(
@@ -1192,13 +1023,10 @@ def main() -> int:
         return 1
 
     except Exception:
-        LOGGER.exception(
-            "Unexpected application error."
-        )
+        LOGGER.exception("Unexpected application error.")
 
         print(
-            "Unexpected application error. "
-            "Check the log file.",
+            "Unexpected application error. Check the log file.",
             file=sys.stderr,
         )
 

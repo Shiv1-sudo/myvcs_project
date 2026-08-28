@@ -8,7 +8,6 @@ from myvcs.common.application_logging import get_logger
 from myvcs.remote.local_remote import LocalRemote
 from myvcs.repository.repository_manager import RepositoryManager
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -31,18 +30,14 @@ class RemoteService:
         """Push to local remote."""
 
         try:
-            remote_repository = (
-                RepositoryManager(
-                    Path(remote_path),
-                    self.configuration,
-                )
+            remote_repository = RepositoryManager(
+                Path(remote_path),
+                self.configuration,
             )
 
             remote_repository.require_repository()
 
-            remote = LocalRemote(
-                remote_repository
-            )
+            remote = LocalRemote(remote_repository)
 
             remote.push(
                 self.repository,
@@ -50,13 +45,9 @@ class RemoteService:
             )
 
         except Exception as exc:
-            LOGGER.exception(
-                "Push failed."
-            )
+            LOGGER.exception("Push failed.")
 
-            raise RepositoryError(
-                "Unable to push."
-            ) from exc
+            raise RepositoryError("Unable to push.") from exc
 
     def fetch(
         self,
@@ -65,45 +56,33 @@ class RemoteService:
         """Fetch from local remote."""
 
         try:
-            remote_repository = (
-                RepositoryManager(
-                    Path(remote_path),
-                    self.configuration,
-                )
+            remote_repository = RepositoryManager(
+                Path(remote_path),
+                self.configuration,
             )
 
             remote_repository.require_repository()
 
-            remote = LocalRemote(
-                remote_repository
-            )
+            remote = LocalRemote(remote_repository)
 
-            remote.fetch(
-                self.repository
-            )
+            remote.fetch(self.repository)
 
         except Exception as exc:
-            LOGGER.exception(
-                "Fetch failed."
-            )
+            LOGGER.exception("Fetch failed.")
 
-            raise RepositoryError(
-                "Unable to fetch."
-            ) from exc
-     
+            raise RepositoryError("Unable to fetch.") from exc
+
     def pull(
         self,
         remote_path: str,
         branch_name: str,
-    ) ->     None:
+    ) -> None:
         """Fetch and fast-forward local branch."""
 
-        self.fetch(
-        remote_path
-        )
+        self.fetch(remote_path)
 
         from myvcs.services.merge_service import (
-        MergeService,
+            MergeService,
         )
 
         merge_service = MergeService(
@@ -111,11 +90,9 @@ class RemoteService:
             self.configuration,
         )
 
-        merge_service.merge(
-        branch_name
-        )
+        merge_service.merge(branch_name)
 
         LOGGER.info(
-        "Pull completed: %s",
-        branch_name,
-    )      
+            "Pull completed: %s",
+            branch_name,
+        )

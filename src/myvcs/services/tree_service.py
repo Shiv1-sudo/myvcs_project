@@ -5,10 +5,8 @@ from pathlib import Path
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_exceptions import ObjectError
 from myvcs.common.application_logging import get_logger
-from myvcs.objects.blob_object import BlobObject
 from myvcs.objects.tree_object import TreeEntry, TreeObject
 from myvcs.repository.object_store import ObjectStore
-
 
 LOGGER = get_logger(__name__)
 
@@ -54,13 +52,9 @@ class TreeService:
             return self._write_tree(root)
 
         except Exception as exc:
-            LOGGER.exception(
-                "Unable to build recursive tree."
-            )
+            LOGGER.exception("Unable to build recursive tree.")
 
-            raise ObjectError(
-                "Unable to build recursive tree."
-            ) from exc
+            raise ObjectError("Unable to build recursive tree.") from exc
 
     def _write_tree(
         self,
@@ -80,9 +74,7 @@ class TreeService:
             "tree_type",
         )
 
-        for name, value in sorted(
-            directory.items()
-        ):
+        for name, value in sorted(directory.items()):
             if isinstance(value, dict):
                 child_id = self._write_tree(value)
 

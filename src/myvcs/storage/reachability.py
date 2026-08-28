@@ -4,7 +4,6 @@ from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_logging import get_logger
 from myvcs.repository.object_store import ObjectStore
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -38,8 +37,7 @@ class ReachabilityAnalyzer:
             )
 
         LOGGER.info(
-            "Reachability analysis completed. "
-            "Objects=%d",
+            "Reachability analysis completed. Objects=%d",
             len(reachable),
         )
 
@@ -54,19 +52,14 @@ class ReachabilityAnalyzer:
             "heads",
             "tags",
         ):
-            directory = (
-                self.repository.references_directory
-                / directory_name
-            )
+            directory = self.repository.references_directory / directory_name
 
             if not directory.exists():
                 continue
 
             for path in directory.iterdir():
                 if path.is_file():
-                    value = path.read_text(
-                        encoding="utf-8"
-                    ).strip()
+                    value = path.read_text(encoding="utf-8").strip()
 
                     if value:
                         references.append(value)
@@ -88,9 +81,7 @@ class ReachabilityAnalyzer:
 
         reachable.add(object_id)
 
-        obj = self.object_store.read(
-            object_id
-        )
+        obj = self.object_store.read(object_id)
 
         object_type = obj.object_type
 

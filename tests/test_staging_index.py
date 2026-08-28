@@ -37,6 +37,4 @@ def test_staging_index(
 
     entries = index.load()
 
-    assert entries == {
-        "hello.txt": "abc123"
-    }
+    assert entries == {"hello.txt": "abc123"}

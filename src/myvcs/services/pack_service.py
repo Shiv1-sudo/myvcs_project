@@ -8,7 +8,6 @@ from myvcs.repository.object_store import ObjectStore
 from myvcs.storage.pack_file import PackFile
 from myvcs.storage.reachability import ReachabilityAnalyzer
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -28,37 +27,25 @@ class PackService:
             configuration,
         )
 
-        self.reachability = (
-            ReachabilityAnalyzer(
-                repository,
-                configuration,
-            )
+        self.reachability = ReachabilityAnalyzer(
+            repository,
+            configuration,
         )
 
-        self.pack_directory = (
-            repository.objects_directory
-            / "pack"
-        )
+        self.pack_directory = repository.objects_directory / "pack"
 
     def pack(self) -> None:
         """Pack reachable objects."""
 
-        reachable = (
-            self.reachability
-            .find_reachable_objects()
-        )
+        reachable = self.reachability.find_reachable_objects()
 
         objects = {}
 
         for object_id in reachable:
             try:
-                obj = self.object_store.read(
-                    object_id
-                )
+                obj = self.object_store.read(object_id)
 
-                objects[
-                    object_id
-                ] = obj.serialize()
+                objects[object_id] = obj.serialize()
 
             except Exception:
                 LOGGER.exception(
@@ -66,9 +53,7 @@ class PackService:
                     object_id,
                 )
 
-        pack_name = (
-            f"pack-{uuid.uuid4().hex}"
-        )
+        pack_name = f"pack-{uuid.uuid4().hex}"
 
         pack_file = PackFile(
             self.pack_directory,
@@ -80,6 +65,4 @@ class PackService:
             pack_name,
         )
 
-        LOGGER.info(
-            "Object packing completed."
-        )
+        LOGGER.info("Object packing completed.")

@@ -1,10 +1,10 @@
-#Index
+# Index
 #  ↓
-#Tree
+# Tree
 #  ↓
-#Commit
+# Commit
 # ↓
-#HEAD"""Commit creation service."""
+# HEAD"""Commit creation service."""
 
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_exceptions import CommitError
@@ -14,7 +14,6 @@ from myvcs.objects.tree_object import TreeObject
 from myvcs.references.reference_manager import ReferenceManager
 from myvcs.repository.object_store import ObjectStore
 from myvcs.staging.staging_index import StagingIndex
-
 
 LOGGER = get_logger(__name__)
 
@@ -40,11 +39,9 @@ class CommitService:
             configuration,
         )
 
-        self.reference_manager = (
-            ReferenceManager(
-                repository,
-                configuration,
-            )
+        self.reference_manager = ReferenceManager(
+            repository,
+            configuration,
         )
 
     def commit(
@@ -55,28 +52,19 @@ class CommitService:
         """Create a commit."""
 
         try:
-            entries = (
-                self.staging_index.load()
-            )
+            entries = self.staging_index.load()
 
             if not entries:
-                raise CommitError(
-                    "Nothing to commit."
-                )
+                raise CommitError("Nothing to commit.")
 
             tree = TreeObject(
                 entries=entries,
                 configuration=self.configuration,
             )
 
-            tree_id = self.object_store.write(
-                tree
-            )
+            tree_id = self.object_store.write(tree)
 
-            parent_id = (
-                self.reference_manager
-                .get_head_commit()
-            )
+            parent_id = self.reference_manager.get_head_commit()
 
             commit = CommitObject(
                 tree_id=tree_id,
@@ -86,18 +74,12 @@ class CommitService:
                 configuration=self.configuration,
             )
 
-            commit_id = (
-                self.object_store.write(
-                    commit
-                )
-            )
+            commit_id = self.object_store.write(commit)
 
-            self.reference_manager.update_head(
-                commit_id
-            )
-            #adding new value 
+            self.reference_manager.update_head(commit_id)
+            # adding new value
             self.staging_index.clear()
-            
+
             LOGGER.info(
                 "Commit created successfully: %s",
                 commit_id,
@@ -109,10 +91,6 @@ class CommitService:
             raise
 
         except Exception as exc:
-            LOGGER.exception(
-                "Commit creation failed."
-            )
+            LOGGER.exception("Commit creation failed.")
 
-            raise CommitError(
-                "Unable to create commit."
-            ) from exc
+            raise CommitError("Unable to create commit.") from exc

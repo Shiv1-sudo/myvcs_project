@@ -8,7 +8,6 @@ from myvcs.common.application_constants import UTF8_ENCODING
 from myvcs.common.application_exceptions import StagingError
 from myvcs.common.application_logging import get_logger
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -30,9 +29,7 @@ class StagingIndex:
             if not self.index_file.exists():
                 return {}
 
-            content = self.index_file.read_text(
-                encoding=UTF8_ENCODING
-            )
+            content = self.index_file.read_text(encoding=UTF8_ENCODING)
 
             if not content.strip():
                 return {}
@@ -40,15 +37,9 @@ class StagingIndex:
             entries = json.loads(content)
 
             if not isinstance(entries, dict):
-                raise StagingError(
-                    "Staging index must contain an object."
-                )
+                raise StagingError("Staging index must contain an object.")
 
-            return {
-                str(path): str(object_id)
-                for path, object_id
-                in entries.items()
-            }
+            return {str(path): str(object_id) for path, object_id in entries.items()}
 
         except StagingError:
             raise
@@ -57,13 +48,9 @@ class StagingIndex:
             OSError,
             json.JSONDecodeError,
         ) as exc:
-            LOGGER.exception(
-                "Unable to load staging index."
-            )
+            LOGGER.exception("Unable to load staging index.")
 
-            raise StagingError(
-                "Unable to load staging index."
-            ) from exc
+            raise StagingError("Unable to load staging index.") from exc
 
     def save(
         self,
@@ -92,13 +79,9 @@ class StagingIndex:
             )
 
         except OSError as exc:
-            LOGGER.exception(
-                "Unable to save staging index."
-            )
+            LOGGER.exception("Unable to save staging index.")
 
-            raise StagingError(
-                "Unable to save staging index."
-            ) from exc
+            raise StagingError("Unable to save staging index.") from exc
 
     def add(
         self,
@@ -133,12 +116,10 @@ class StagingIndex:
 
         self.save(entries)
 
-    #new code 
+    # new code
     def clear(self) -> None:
         """Clear all staged entries."""
 
         self.save({})
 
-        LOGGER.info(
-            "Staging index cleared."
-        )    
+        LOGGER.info("Staging index cleared.")

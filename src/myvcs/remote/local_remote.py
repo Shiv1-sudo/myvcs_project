@@ -5,7 +5,6 @@ import shutil
 from myvcs.common.application_logging import get_logger
 from myvcs.remote.remote import Remote
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -22,13 +21,9 @@ class LocalRemote(Remote):
     ) -> None:
         """Push objects to remote."""
 
-        source_objects = (
-            source_repository.objects_directory
-        )
+        source_objects = source_repository.objects_directory
 
-        destination_objects = (
-            self.remote_repository.objects_directory
-        )
+        destination_objects = self.remote_repository.objects_directory
 
         destination_objects.mkdir(
             parents=True,
@@ -39,10 +34,7 @@ class LocalRemote(Remote):
             if not directory.is_dir():
                 continue
 
-            target_directory = (
-                destination_objects
-                / directory.name
-            )
+            target_directory = destination_objects / directory.name
 
             target_directory.mkdir(
                 parents=True,
@@ -50,10 +42,7 @@ class LocalRemote(Remote):
             )
 
             for object_file in directory.iterdir():
-                target = (
-                    target_directory
-                    / object_file.name
-                )
+                target = target_directory / object_file.name
 
                 if not target.exists():
                     shutil.copy2(
@@ -61,18 +50,10 @@ class LocalRemote(Remote):
                         target,
                     )
 
-        commit_id = (
-            source_repository
-            .references_directory
-            / "heads"
-            / branch_name
-        )
+        commit_id = source_repository.references_directory / "heads" / branch_name
 
         remote_branch = (
-            self.remote_repository
-            .references_directory
-            / "heads"
-            / branch_name
+            self.remote_repository.references_directory / "heads" / branch_name
         )
 
         remote_branch.parent.mkdir(
@@ -97,13 +78,9 @@ class LocalRemote(Remote):
     ) -> None:
         """Fetch remote objects."""
 
-        source_objects = (
-            self.remote_repository.objects_directory
-        )
+        source_objects = self.remote_repository.objects_directory
 
-        destination_objects = (
-            target_repository.objects_directory
-        )
+        destination_objects = target_repository.objects_directory
 
         destination_objects.mkdir(
             parents=True,
@@ -114,10 +91,7 @@ class LocalRemote(Remote):
             if not directory.is_dir():
                 continue
 
-            target_directory = (
-                destination_objects
-                / directory.name
-            )
+            target_directory = destination_objects / directory.name
 
             target_directory.mkdir(
                 parents=True,
@@ -125,10 +99,7 @@ class LocalRemote(Remote):
             )
 
             for object_file in directory.iterdir():
-                target = (
-                    target_directory
-                    / object_file.name
-                )
+                target = target_directory / object_file.name
 
                 if not target.exists():
                     shutil.copy2(
@@ -136,6 +107,4 @@ class LocalRemote(Remote):
                         target,
                     )
 
-        LOGGER.info(
-            "Fetch completed."
-        )
+        LOGGER.info("Fetch completed.")

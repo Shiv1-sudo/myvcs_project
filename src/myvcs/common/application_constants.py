@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-
 PACKAGE_NAME = "myvcs"
 SOURCE_DIRECTORY_NAME = "src"
 CONFIGURATION_DIRECTORY_NAME = "configuration"
@@ -34,10 +33,7 @@ def find_project_root(start_directory: Path) -> Path:
         current_directory,
         *current_directory.parents,
     ):
-        if all(
-            (directory / marker).exists()
-            for marker in PROJECT_ROOT_MARKERS
-        ):
+        if all((directory / marker).exists() for marker in PROJECT_ROOT_MARKERS):
             return directory
 
     return current_directory

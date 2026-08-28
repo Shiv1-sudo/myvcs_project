@@ -86,6 +86,8 @@ class ApplicationConfig:
     )
 
     return configuration_file'''
+
+
 def locate_configuration_file() -> Path:
     """Locate application configuration.
 
@@ -98,21 +100,15 @@ def locate_configuration_file() -> Path:
 
     application_source_directory = Path(__file__).resolve()
 
-    project_root = find_project_root(
-        application_source_directory
-    )
+    project_root = find_project_root(application_source_directory)
 
-    return (
-        project_root
-        / CONFIGURATION_DIRECTORY_NAME
-        / APPLICATION_CONFIG_FILE_NAME
-    )
+    return project_root / CONFIGURATION_DIRECTORY_NAME / APPLICATION_CONFIG_FILE_NAME
 
 
 def load_configuration() -> ApplicationConfig:
     """Load configuration from YAML."""
 
-    configuration_file = locate_configuration_file()    
+    configuration_file = locate_configuration_file()
 
     try:
         with configuration_file.open(
@@ -130,12 +126,10 @@ def load_configuration() -> ApplicationConfig:
 
     except FileNotFoundError as exc:
         raise ConfigurationError(
-            f"Configuration file not found: "
-            f"{configuration_file}"
+            f"Configuration file not found: {configuration_file}"
         ) from exc
 
     except yaml.YAMLError as exc:
         raise ConfigurationError(
-            f"Invalid YAML configuration: "
-            f"{configuration_file}"
+            f"Invalid YAML configuration: {configuration_file}"
         ) from exc

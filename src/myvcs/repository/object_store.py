@@ -11,7 +11,6 @@ from myvcs.common.application_exceptions import ObjectStoreError
 from myvcs.common.application_logging import get_logger
 from myvcs.objects.vcs_object import VCSObject
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -33,23 +32,13 @@ class ObjectStore:
         """Build object path."""
 
         if len(object_id) != OBJECT_ID_LENGTH:
-            raise ObjectStoreError(
-                f"Invalid object ID: {object_id}"
-            )
+            raise ObjectStoreError(f"Invalid object ID: {object_id}")
 
-        directory_name = object_id[
-            :OBJECT_DIRECTORY_PREFIX_LENGTH
-        ]
+        directory_name = object_id[:OBJECT_DIRECTORY_PREFIX_LENGTH]
 
-        filename = object_id[
-            OBJECT_DIRECTORY_PREFIX_LENGTH:
-        ]
+        filename = object_id[OBJECT_DIRECTORY_PREFIX_LENGTH:]
 
-        return (
-            self.objects_directory
-            / directory_name
-            / filename
-        )
+        return self.objects_directory / directory_name / filename
 
     def exists(
         self,
@@ -57,9 +46,7 @@ class ObjectStore:
     ) -> bool:
         """Check whether object exists."""
 
-        return self._object_path(
-            object_id
-        ).is_file()
+        return self._object_path(object_id).is_file()
 
     def write(
         self,
@@ -68,15 +55,11 @@ class ObjectStore:
         """Persist an object."""
 
         try:
-            serialized_object = (
-                vcs_object.serialize()
-            )
+            serialized_object = vcs_object.serialize()
 
             object_id = vcs_object.object_id()
 
-            object_path = self._object_path(
-                object_id
-            )
+            object_path = self._object_path(object_id)
 
             object_path.parent.mkdir(
                 parents=True,
@@ -84,9 +67,7 @@ class ObjectStore:
             )
 
             if not object_path.exists():
-                object_path.write_bytes(
-                    serialized_object
-                )
+                object_path.write_bytes(serialized_object)
 
                 LOGGER.info(
                     "Object created: %s",
@@ -101,13 +82,9 @@ class ObjectStore:
             return object_id
 
         except OSError as exc:
-            LOGGER.exception(
-                "Failed to write object."
-            )
+            LOGGER.exception("Failed to write object.")
 
-            raise ObjectStoreError(
-                f"Unable to write object: {exc}"
-            ) from exc
+            raise ObjectStoreError(f"Unable to write object: {exc}") from exc
 
     def read(
         self,
@@ -116,14 +93,10 @@ class ObjectStore:
         """Read a raw object."""
 
         try:
-            object_path = self._object_path(
-                object_id
-            )
+            object_path = self._object_path(object_id)
 
             if not object_path.exists():
-                raise ObjectStoreError(
-                    f"Object not found: {object_id}"
-                )
+                raise ObjectStoreError(f"Object not found: {object_id}")
 
             return object_path.read_bytes()
 
@@ -136,6 +109,4 @@ class ObjectStore:
                 object_id,
             )
 
-            raise ObjectStoreError(
-                f"Unable to read object: {object_id}"
-            ) from exc
+            raise ObjectStoreError(f"Unable to read object: {object_id}") from exc

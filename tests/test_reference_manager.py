@@ -54,21 +54,10 @@ def test_reference_manager(
         configuration=configuration,
     )
 
-    assert (
-        references.current_branch()
-        == "main"
-    )
+    assert references.current_branch() == "main"
 
-    assert (
-        references.get_head_commit()
-        is None
-    )
+    assert references.get_head_commit() is None
 
-    references.update_head(
-        "abc123"
-    )
+    references.update_head("abc123")
 
-    assert (
-        references.get_head_commit()
-        == "abc123"
-    )
+    assert references.get_head_commit() == "abc123"

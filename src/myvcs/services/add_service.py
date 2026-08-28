@@ -1,14 +1,11 @@
 """File staging service."""
 
-from pathlib import Path
-
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_exceptions import RepositoryError
 from myvcs.common.application_logging import get_logger
 from myvcs.objects.blob_object import BlobObject
 from myvcs.repository.object_store import ObjectStore
 from myvcs.staging.staging_index import StagingIndex
-
 
 LOGGER = get_logger(__name__)
 
@@ -41,21 +38,12 @@ class AddService:
         """Stage a file."""
 
         try:
-            source_path = (
-                self.repository.working_directory
-                / file_path
-            ).resolve()
+            source_path = (self.repository.working_directory / file_path).resolve()
 
             if not source_path.is_file():
-                raise RepositoryError(
-                    f"File does not exist: {file_path}"
-                )
+                raise RepositoryError(f"File does not exist: {file_path}")
 
-            relative_path = (
-                self.repository.relative_path(
-                    source_path
-                )
-            )
+            relative_path = self.repository.relative_path(source_path)
 
             data = source_path.read_bytes()
 
@@ -64,9 +52,7 @@ class AddService:
                 configuration=self.configuration,
             )
 
-            object_id = self.object_store.write(
-                blob
-            )
+            object_id = self.object_store.write(blob)
 
             self.staging_index.add(
                 relative_path=relative_path,
@@ -84,10 +70,6 @@ class AddService:
             raise
 
         except OSError as exc:
-            LOGGER.exception(
-                "Unable to stage file."
-            )
+            LOGGER.exception("Unable to stage file.")
 
-            raise RepositoryError(
-                f"Unable to stage file: {file_path}"
-            ) from exc
+            raise RepositoryError(f"Unable to stage file: {file_path}") from exc

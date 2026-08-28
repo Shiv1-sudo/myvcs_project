@@ -10,7 +10,6 @@ from myvcs.references.reference_manager import ReferenceManager
 from myvcs.repository.object_store import ObjectStore
 from myvcs.staging.staging_index import StagingIndex
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -47,9 +46,7 @@ class CheckoutService:
         """Checkout branch."""
 
         try:
-            current_branch = (
-                self.reference_manager.current_branch()
-            )
+            current_branch = self.reference_manager.current_branch()
 
             if current_branch == branch_name:
                 LOGGER.info(
@@ -58,34 +55,18 @@ class CheckoutService:
                 )
                 return
 
-            commit_id = (
-                self.reference_manager.get_branch_commit(
-                    branch_name
-                )
-            )
+            commit_id = self.reference_manager.get_branch_commit(branch_name)
 
             if commit_id is None:
-                raise ReferenceError(
-                    f"Branch not found: {branch_name}"
-                )
+                raise ReferenceError(f"Branch not found: {branch_name}")
 
-            commit_data = (
-                self.object_store.read(
-                    commit_id
-                )
-            )
+            commit_data = self.object_store.read(commit_id)
 
-            tree_id = self._get_tree_id(
-                commit_data
-            )
+            tree_id = self._get_tree_id(commit_data)
 
-            self._restore_tree(
-                tree_id
-            )
+            self._restore_tree(tree_id)
 
-            self.reference_manager.checkout_branch(
-                branch_name
-            )
+            self.reference_manager.checkout_branch(branch_name)
 
             self.staging_index.clear()
 
@@ -98,13 +79,9 @@ class CheckoutService:
             raise
 
         except Exception as exc:
-            LOGGER.exception(
-                "Checkout failed."
-            )
+            LOGGER.exception("Checkout failed.")
 
-            raise ReferenceError(
-                "Unable to checkout branch."
-            ) from exc
+            raise ReferenceError("Unable to checkout branch.") from exc
 
     def _get_tree_id(
         self,
@@ -113,9 +90,7 @@ class CheckoutService:
         """Extract the tree ID from a serialized commit."""
 
         if not isinstance(commit_data, bytes):
-            raise ValueError(
-                "Invalid commit data."
-            )
+            raise TypeError("Invalid commit data.")
 
         # VCSObject.serialize() format:
         #
@@ -146,9 +121,7 @@ class CheckoutService:
                 if tree_id:
                     return tree_id
 
-        raise ValueError(
-            "Commit does not contain a tree."
-        )
+        raise ValueError("Commit does not contain a tree.")
 
     def _read_tree(
         self,
@@ -156,22 +129,12 @@ class CheckoutService:
     ) -> TreeObject:
         """Read and deserialize a tree object."""
 
-        tree_data = (
-            self.object_store.read(
-                tree_id
-            )
-        )
+        tree_data = self.object_store.read(tree_id)
 
         if not isinstance(tree_data, bytes):
-            raise ValueError(
-                "Invalid tree data."
-            )
+            raise TypeError("Invalid tree data.")
 
-        tree_payload = (
-            self._extract_payload(
-                tree_data
-            )
-        )
+        tree_payload = self._extract_payload(tree_data)
 
         return TreeObject.deserialize(
             tree_payload,
@@ -185,26 +148,17 @@ class CheckoutService:
     ) -> None:
         """Restore a tree recursively."""
 
-        tree = self._read_tree(
-            tree_id
-        )
+        tree = self._read_tree(tree_id)
 
-        tree_type = (
-            self.configuration.require(
-                "objects",
-                "tree_type",
-            )
+        tree_type = self.configuration.require(
+            "objects",
+            "tree_type",
         )
 
         for entry in tree.entries:
-            relative_path = (
-                Path(prefix) / entry.name
-            )
+            relative_path = Path(prefix) / entry.name
 
-            destination = (
-                self.repository.working_directory
-                / relative_path
-            )
+            destination = self.repository.working_directory / relative_path
 
             if entry.object_type == tree_type:
                 destination.mkdir(
@@ -218,34 +172,22 @@ class CheckoutService:
                 )
 
             else:
-                blob_data = (
-                    self.object_store.read(
-                        entry.object_id
-                    )
-                )
+                blob_data = self.object_store.read(entry.object_id)
 
                 if not isinstance(
                     blob_data,
                     bytes,
                 ):
-                    raise ValueError(
-                        "Invalid blob data."
-                    )
+                    raise ValueError("Invalid blob data.")
 
-                blob_payload = (
-                    self._extract_payload(
-                        blob_data
-                    )
-                )
+                blob_payload = self._extract_payload(blob_data)
 
                 destination.parent.mkdir(
                     parents=True,
                     exist_ok=True,
                 )
 
-                destination.write_bytes(
-                    blob_payload
-                )
+                destination.write_bytes(blob_payload)
 
     def _extract_payload(
         self,
@@ -257,9 +199,7 @@ class CheckoutService:
             object_data,
             bytes,
         ):
-            raise ValueError(
-                "Invalid object data."
-            )
+            raise TypeError("Invalid object data.")
 
         separator = b"\0"
 

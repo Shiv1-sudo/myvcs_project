@@ -6,7 +6,6 @@ from pathlib import Path
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_logging import get_logger
 
-
 LOGGER = get_logger(__name__)
 
 
@@ -26,11 +25,9 @@ class PackFile:
             "extension",
         )
 
-        self.index_extension = (
-            configuration.require(
-                "pack",
-                "index_extension",
-            )
+        self.index_extension = configuration.require(
+            "pack",
+            "index_extension",
         )
 
     def create(
@@ -45,21 +42,13 @@ class PackFile:
             exist_ok=True,
         )
 
-        pack_file = (
-            self.pack_directory
-            / f"{pack_name}{self.extension}"
-        )
+        pack_file = self.pack_directory / f"{pack_name}{self.extension}"
 
-        index_file = (
-            self.pack_directory
-            / f"{pack_name}{self.index_extension}"
-        )
+        index_file = self.pack_directory / f"{pack_name}{self.index_extension}"
 
         index: dict[str, int] = {}
 
-        with pack_file.open(
-            "wb"
-        ) as file:
+        with pack_file.open("wb") as file:
             for object_id, data in objects.items():
                 offset = file.tell()
 
@@ -69,17 +58,11 @@ class PackFile:
                     "data": data.hex(),
                 }
 
-                encoded = (
-                    json.dumps(record)
-                    .encode("utf-8")
-                    + b"\n"
-                )
+                encoded = json.dumps(record).encode("utf-8") + b"\n"
 
                 file.write(encoded)
 
-                index[
-                    object_id
-                ] = offset
+                index[object_id] = offset
 
         index_file.write_text(
             json.dumps(
