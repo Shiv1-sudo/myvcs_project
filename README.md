@@ -858,8 +858,5 @@ clone
 
 By implementing these mechanisms explicitly, MyVCS serves as an architectural exploration of how version-control systems represent content, history, repository state, references, and storage.
 
----
 
-## License
 
-Add an appropriate license if this project is intended for public distribution.
