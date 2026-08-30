@@ -1,6 +1,10 @@
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+
 stages:
   - validate
   - test
+  - sast
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -9,26 +13,35 @@ cache:
   paths:
     - .cache/pip
 
-before_script:
-  - python --version
-  - pip install --upgrade pip
-  - pip install -e .
-  - pip install pytest ruff
-
 validate:
   stage: validate
   image: python:3.12
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install -e .
+    - pip install pytest ruff
   script:
     - python -m compileall src
 
 lint:
   stage: validate
   image: python:3.12
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install -e .
+    - pip install pytest ruff
   script:
     - ruff check src tests
 
 test:
   stage: test
   image: python:3.12
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install -e .
+    - pip install pytest ruff
   script:
     - pytest -v
