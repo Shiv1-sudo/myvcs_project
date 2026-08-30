@@ -1,5 +1,6 @@
 include:
   - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.latest.gitlab-ci.yml
 
 stages:
   - validate
