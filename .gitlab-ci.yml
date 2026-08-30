@@ -7,10 +7,12 @@ stages:
   - test
   - sast
   - build
+  - security
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   DOCKER_TLS_CERTDIR: "/certs"
+  TRIVY_NO_PROGRESS: "true"
 
 cache:
   paths:
@@ -60,3 +62,13 @@ docker_build:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" .
     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+trivy_scan:
+  stage: security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  before_script:
+    - trivy registry login --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+  script:
+    - trivy image --severity HIGH,CRITICAL --exit-code 0 "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
