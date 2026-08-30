@@ -53,56 +53,16 @@ class ApplicationConfig:
         return self.get(*keys)
 
 
-'''def locate_configuration_file() -> Path:
+def locate_configuration_file() -> Path:
     """Locate application configuration."""
 
-    project_root = find_project_root(
-        Path.cwd()
-    )
+    project_root = find_project_root(Path.cwd())
 
     return (
         project_root
         / CONFIGURATION_DIRECTORY_NAME
         / APPLICATION_CONFIG_FILE_NAME
-    )'''
-
-'''def locate_configuration_file() -> Path:
-    """Locate the application configuration file.
-
-    The configuration belongs to the MyVCS application, not to the
-    repository currently being managed.
-
-    Therefore, configuration discovery must not depend on Path.cwd().
-    """
-
-    project_root = find_project_root(
-        Path(__file__).resolve()
     )
-
-    configuration_file = (
-        project_root
-        / CONFIGURATION_DIRECTORY_NAME
-        / APPLICATION_CONFIG_FILE_NAME
-    )
-
-    return configuration_file'''
-
-
-def locate_configuration_file() -> Path:
-    """Locate application configuration.
-
-    Configuration belongs to the MyVCS application and must therefore
-    be resolved from the application source location, not from the
-    current working directory.
-
-    The current working directory may be a repository managed by MyVCS.
-    """
-
-    application_source_directory = Path(__file__).resolve()
-
-    project_root = find_project_root(application_source_directory)
-
-    return project_root / CONFIGURATION_DIRECTORY_NAME / APPLICATION_CONFIG_FILE_NAME
 
 
 def load_configuration() -> ApplicationConfig:
@@ -133,3 +93,4 @@ def load_configuration() -> ApplicationConfig:
         raise ConfigurationError(
             f"Invalid YAML configuration: {configuration_file}"
         ) from exc
+

@@ -1,6 +1,4 @@
-"""Application logging configuration."""
 
-# New Code
 """Application logging configuration."""
 
 import logging
@@ -40,7 +38,17 @@ def configure_logging(
     if configured_log_directory.is_absolute():
         log_directory = configured_log_directory
     else:
-        project_root = find_project_root(Path(__file__).resolve())
+        project_root = find_project_root(
+            Path(__file__).resolve().parent
+        )
+
+        # When running from an installed Docker image, the project root
+        # may not contain pyproject.toml. In that case, use /app.
+        if not (
+            (project_root / "pyproject.toml").exists()
+            and (project_root / "README.md").exists()
+        ):
+            project_root = Path("/app")
 
         log_directory = project_root / configured_log_directory
 
@@ -74,3 +82,4 @@ def get_logger(
     """Return a logger for a component."""
 
     return logging.getLogger(name)
+
