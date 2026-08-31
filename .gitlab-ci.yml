@@ -60,7 +60,7 @@ docker_build:
     DOCKER_TLS_CERTDIR: "/certs"
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
-    - docker build -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" .
+    - docker build --platform linux/amd64 --provenance=false -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" .
     - test "$(docker inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format '{{.Config.User}}')" = "myvcs"
     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
 
