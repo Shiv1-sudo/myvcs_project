@@ -58,10 +58,15 @@ docker_build:
     - docker:27-dind
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
+
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
     - docker build --platform linux/amd64 --provenance=false -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" .
-    - test "$(docker inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format '{{.Config.User}}')" = "myvcs"
+    - echo "=== IMAGE USER ==="
+    - docker image inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format 'USER={{.Config.User}}'
+    - echo "=== IMAGE ENTRYPOINT ==="
+    - docker image inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format 'ENTRYPOINT={{json .Config.Entrypoint}}'
+    - test "$(docker image inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format '{{.Config.User}}')" = "myvcs"
     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
 
 trivy_scan:
