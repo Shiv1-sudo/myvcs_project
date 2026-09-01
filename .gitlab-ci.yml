@@ -21,60 +21,200 @@ cache:
 validate:
   stage: validate
   image: python:3.12
+
   before_script:
     - python --version
     - pip install --upgrade pip
     - pip install -e .
     - pip install pytest ruff
+
   script:
     - python -m compileall src
 
 lint:
   stage: validate
   image: python:3.12
+
   before_script:
     - python --version
     - pip install --upgrade pip
     - pip install -e .
     - pip install pytest ruff
+
   script:
     - ruff check src tests
 
 test:
   stage: test
   image: python:3.12
+
   before_script:
     - python --version
     - pip install --upgrade pip
     - pip install -e .
     - pip install pytest ruff
+
   script:
     - pytest -v
 
 docker_build:
   stage: build
   image: docker:27
+
   services:
     - docker:27-dind
+
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
 
   script:
+    # ------------------------------------------------------------
+    # Define image
+    # ------------------------------------------------------------
+    - export IMAGE="$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+    - echo "=== IMAGE ==="
+    - echo "$IMAGE"
+
+    # ------------------------------------------------------------
+    # Login to GitLab Container Registry
+    # ------------------------------------------------------------
+    - echo "=== REGISTRY LOGIN ==="
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
-    - docker build --platform linux/amd64 --provenance=false -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" .
-    - echo "=== IMAGE USER ==="
-    - docker image inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format 'USER={{.Config.User}}'
-    - echo "=== IMAGE ENTRYPOINT ==="
-    - docker image inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format 'ENTRYPOINT={{json .Config.Entrypoint}}'
-    - test "$(docker image inspect "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" --format '{{.Config.User}}')" = "myvcs"
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+    # ------------------------------------------------------------
+    # Build image
+    # ------------------------------------------------------------
+    - echo "=== BUILDING IMAGE ==="
+    - docker build
+      --no-cache
+      --pull
+      --platform linux/amd64
+      --provenance=false
+      -t "$IMAGE"
+      .
+
+    # ------------------------------------------------------------
+    # Inspect LOCAL image
+    # ------------------------------------------------------------
+    - echo "=== LOCAL IMAGE ID ==="
+    - docker image inspect "$IMAGE" --format 'IMAGE_ID={{.Id}}'
+
+    - echo "=== LOCAL IMAGE USER ==="
+    - docker image inspect "$IMAGE" --format 'USER={{.Config.User}}'
+
+    - echo "=== LOCAL IMAGE ENTRYPOINT ==="
+    - docker image inspect "$IMAGE" --format 'ENTRYPOINT={{json .Config.Entrypoint}}'
+
+    - echo "=== LOCAL IMAGE CMD ==="
+    - docker image inspect "$IMAGE" --format 'CMD={{json .Config.Cmd}}'
+
+    - echo "=== LOCAL FULL CONFIG ==="
+    - docker image inspect "$IMAGE" --format '{{json .Config}}'
+
+    # ------------------------------------------------------------
+    # Verify LOCAL image metadata
+    # ------------------------------------------------------------
+    - echo "=== VERIFY LOCAL USER ==="
+    - test "$(docker image inspect "$IMAGE" --format '{{.Config.User}}')" = "myvcs"
+
+    - echo "=== VERIFY LOCAL ENTRYPOINT ==="
+    - test "$(docker image inspect "$IMAGE" --format '{{json .Config.Entrypoint}}')" = '["myvcs"]'
+
+    # ------------------------------------------------------------
+    # Verify LOCAL runtime user
+    # ------------------------------------------------------------
+    - echo "=== VERIFY LOCAL RUNTIME USER ==="
+    - docker run --rm --entrypoint id "$IMAGE"
+
+    # ------------------------------------------------------------
+    # Verify application
+    # ------------------------------------------------------------
+    - echo "=== VERIFY APPLICATION ==="
+    - docker run --rm "$IMAGE" --help
+
+    # ------------------------------------------------------------
+    # Push image
+    # ------------------------------------------------------------
+    - echo "=== PUSHING IMAGE ==="
+    - docker push "$IMAGE"
+
+    # ------------------------------------------------------------
+    # Remove local image
+    #
+    # This is important:
+    # We want the following checks to use the image pulled
+    # back from GitLab Registry, not the locally-built image.
+    # ------------------------------------------------------------
+    - echo "=== REMOVING LOCAL IMAGE ==="
+    - docker image rm "$IMAGE"
+
+    # ------------------------------------------------------------
+    # Pull image back from GitLab Registry
+    # ------------------------------------------------------------
+    - echo "=== PULLING IMAGE FROM REGISTRY ==="
+    - docker pull "$IMAGE"
+
+    # ------------------------------------------------------------
+    # Inspect image AFTER registry round-trip
+    # ------------------------------------------------------------
+    - echo "=== REGISTRY IMAGE ID ==="
+    - docker image inspect "$IMAGE" --format 'IMAGE_ID={{.Id}}'
+
+    - echo "=== REGISTRY IMAGE USER ==="
+    - docker image inspect "$IMAGE" --format 'USER={{.Config.User}}'
+
+    - echo "=== REGISTRY IMAGE ENTRYPOINT ==="
+    - docker image inspect "$IMAGE" --format 'ENTRYPOINT={{json .Config.Entrypoint}}'
+
+    - echo "=== REGISTRY IMAGE CMD ==="
+    - docker image inspect "$IMAGE" --format 'CMD={{json .Config.Cmd}}'
+
+    - echo "=== REGISTRY FULL CONFIG ==="
+    - docker image inspect "$IMAGE" --format '{{json .Config}}'
+
+    # ------------------------------------------------------------
+    # Verify REGISTRY image metadata
+    # ------------------------------------------------------------
+    - echo "=== VERIFY REGISTRY USER ==="
+    - test "$(docker image inspect "$IMAGE" --format '{{.Config.User}}')" = "myvcs"
+
+    - echo "=== VERIFY REGISTRY ENTRYPOINT ==="
+    - test "$(docker image inspect "$IMAGE" --format '{{json .Config.Entrypoint}}')" = '["myvcs"]'
+
+    # ------------------------------------------------------------
+    # Verify REGISTRY runtime user
+    # ------------------------------------------------------------
+    - echo "=== VERIFY REGISTRY RUNTIME USER ==="
+    - docker run --rm --entrypoint id "$IMAGE"
+
+    # ------------------------------------------------------------
+    # Verify application from REGISTRY image
+    # ------------------------------------------------------------
+    - echo "=== VERIFY REGISTRY APPLICATION ==="
+    - docker run --rm "$IMAGE" --help
+
+    # ------------------------------------------------------------
+    # Inspect registry manifest
+    # ------------------------------------------------------------
+    - echo "=== REGISTRY MANIFEST ==="
+    - docker manifest inspect "$IMAGE"
+
 
 trivy_scan:
   stage: security
   image:
     name: aquasec/trivy:latest
     entrypoint: [""]
+
   before_script:
-    - trivy registry login --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - trivy registry login
+      --username "$CI_REGISTRY_USER"
+      --password "$CI_REGISTRY_PASSWORD"
+      "$CI_REGISTRY"
+
   script:
-    - trivy image --severity HIGH,CRITICAL --exit-code 0 "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - trivy image
+      --severity HIGH,CRITICAL
+      --exit-code 0
+      "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"

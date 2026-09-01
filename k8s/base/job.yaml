@@ -18,18 +18,20 @@ spec:
     spec:
       restartPolicy: Never
 
-      imagePullSecrets:
-        - name: gitlab-registry
-
       securityContext:
         runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
         seccompProfile:
           type: RuntimeDefault
+
+      imagePullSecrets:
+        - name: gitlab-registry
 
       containers:
         - name: myvcs
           image: myvcs
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
 
           command:
             - myvcs
