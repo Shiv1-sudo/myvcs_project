@@ -8,8 +8,8 @@ resources:
 
 images:
   - name: myvcs
-    newName: myvcs-test
-    newTag: latest
+    newName: registry.gitlab.com/duttashivani06/myvcs_project
+    newTag: 7e5a7bc3
 
 patches:
   - target:
@@ -18,10 +18,4 @@ patches:
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/imagePullPolicy
-        value: Never
-      - op: add
-        path: /spec/template/spec/securityContext/runAsUser
-        value: 1000
-      - op: add
-        path: /spec/template/spec/securityContext/runAsGroup
-        value: 1000
+        value: Always
