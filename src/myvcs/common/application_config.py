@@ -1,5 +1,6 @@
 """Application configuration management."""
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -55,12 +56,13 @@ class ApplicationConfig:
 def locate_configuration_file() -> Path:
     """Locate application configuration."""
 
-    package_directory = Path(__file__).resolve().parents[2]
+    configured_path = os.getenv("MYVCS_CONFIG_FILE")
 
-    project_root = package_directory.parent
+    if configured_path:
+        return Path(configured_path)
 
     return (
-        project_root
+        Path("/app")
         / CONFIGURATION_DIRECTORY_NAME
         / APPLICATION_CONFIG_FILE_NAME
     )
