@@ -9,12 +9,22 @@ resources:
 images:
   - name: myvcs
     newName: registry.gitlab.com/duttashivani06/myvcs_project
-    newTag: 0090893
+    newTag: 248cd504
 
 patches:
   - target:
       kind: Job
       name: myvcs-help
+
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+
+  - target:
+      kind: Deployment
+      name: myvcs
+
     patch: |-
       - op: replace
         path: /spec/template/spec/containers/0/imagePullPolicy

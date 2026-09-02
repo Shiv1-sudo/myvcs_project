@@ -8,7 +8,6 @@ import yaml
 from myvcs.common.application_constants import (
     APPLICATION_CONFIG_FILE_NAME,
     CONFIGURATION_DIRECTORY_NAME,
-    find_project_root,
 )
 from myvcs.common.application_exceptions import ConfigurationError
 
@@ -56,7 +55,9 @@ class ApplicationConfig:
 def locate_configuration_file() -> Path:
     """Locate application configuration."""
 
-    project_root = find_project_root(Path.cwd())
+    package_directory = Path(__file__).resolve().parents[2]
+
+    project_root = package_directory.parent
 
     return (
         project_root
@@ -93,4 +94,3 @@ def load_configuration() -> ApplicationConfig:
         raise ConfigurationError(
             f"Invalid YAML configuration: {configuration_file}"
         ) from exc
-
