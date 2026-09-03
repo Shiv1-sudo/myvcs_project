@@ -9,7 +9,7 @@ resources:
 images:
   - name: myvcs
     newName: registry.gitlab.com/duttashivani06/myvcs_project
-    newTag: 248cd504
+    newTag: 74e63507
 
 patches:
   - target:
