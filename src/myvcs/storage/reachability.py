@@ -3,6 +3,8 @@
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_logging import get_logger
 from myvcs.repository.object_store import ObjectStore
+from myvcs.objects.commit_object import CommitObject
+from myvcs.objects.tree_object import TreeObject
 
 LOGGER = get_logger(__name__)
 
@@ -81,9 +83,25 @@ class ReachabilityAnalyzer:
 
         reachable.add(object_id)
 
-        obj = self.object_store.read(object_id)
+        obj_data = self.object_store.read(object_id)
+        if not isinstance(obj_data, bytes):
+            raise TypeError(f"Invalid object data for ID: {object_id}")
 
-        object_type = obj.object_type
+        separator = b"\0"
+
+        if separator in obj_data:
+            header, payload = obj_data.split(
+                separator,
+                1,
+            )
+        else:
+            header = obj_data
+            payload = obj_data
+
+        object_type = header.split(
+            b" ",
+            1,
+                )[0].decode("utf-8")
 
         tree_type = self.configuration.require(
             "objects",
@@ -96,6 +114,10 @@ class ReachabilityAnalyzer:
         )
 
         if object_type == commit_type:
+            obj = CommitObject.deserialize(
+                payload,
+                self.configuration,
+                            )
             self._visit(
                 obj.tree_id,
                 reachable,
@@ -108,6 +130,10 @@ class ReachabilityAnalyzer:
                 )
 
         elif object_type == tree_type:
+            obj = TreeObject.deserialize(
+                payload,
+                self.configuration,
+               )
             for entry in obj.entries:
                 self._visit(
                     entry.object_id,

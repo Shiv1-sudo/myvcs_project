@@ -6,6 +6,7 @@ from myvcs.common.application_logging import get_logger
 from myvcs.references.reference_manager import ReferenceManager
 from myvcs.repository.object_store import ObjectStore
 from myvcs.services.checkout_service import CheckoutService
+from myvcs.objects.commit_object import CommitObject
 
 LOGGER = get_logger(__name__)
 
@@ -59,9 +60,14 @@ class MergeService:
             ):
                 raise CommitError("Non-fast-forward merge is not implemented yet.")
 
-            source = self.object_store.read(source_commit)
+            source_data = self.object_store.read(source_commit)
+            source = CommitObject.deserialize(
+                source_data,
+                self.configuration,
+            )
 
             self.checkout_service._restore_tree(source.tree_id)
+
 
             self.references.update_head(source_commit)
 
@@ -93,7 +99,12 @@ class MergeService:
             if current == target_id:
                 return True
 
-            commit = self.object_store.read(current)
+            commit_data = self.object_store.read(current)
+
+            commit = CommitObject.deserialize(
+                commit_data,
+                self.configuration,
+            )
 
             current = commit.parent_id
 
