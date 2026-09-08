@@ -22,6 +22,9 @@ spec:
         app.kubernetes.io/component: application
 
     spec:
+      serviceAccountName: myvcs
+      automountServiceAccountToken: false
+
       imagePullSecrets:
         - name: gitlab-registry
 
@@ -30,19 +33,16 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
-
         seccompProfile:
           type: RuntimeDefault
 
       containers:
         - name: myvcs
-
           image: myvcs
-
           imagePullPolicy: Always
 
-          # Keep the container alive while we don't
-          # yet have a long-running MyVCS server command.
+          workingDir: /workspace
+
           command:
             - /bin/sh
             - -c
@@ -55,7 +55,6 @@ spec:
 
           securityContext:
             allowPrivilegeEscalation: false
-
             capabilities:
               drop:
                 - ALL
@@ -64,7 +63,6 @@ spec:
             requests:
               cpu: 50m
               memory: 64Mi
-
             limits:
               cpu: 250m
               memory: 256Mi
