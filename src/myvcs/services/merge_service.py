@@ -3,10 +3,10 @@
 from myvcs.common.application_config import ApplicationConfig
 from myvcs.common.application_exceptions import CommitError
 from myvcs.common.application_logging import get_logger
+from myvcs.objects.commit_object import CommitObject
 from myvcs.references.reference_manager import ReferenceManager
 from myvcs.repository.object_store import ObjectStore
 from myvcs.services.checkout_service import CheckoutService
-from myvcs.objects.commit_object import CommitObject
 
 LOGGER = get_logger(__name__)
 
