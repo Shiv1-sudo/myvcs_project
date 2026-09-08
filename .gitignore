@@ -36,3 +36,9 @@ logs/
 
 # Local configuration/secrets
 .env
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
