@@ -53,20 +53,39 @@ class ApplicationConfig:
         return self.get(*keys)
 
 
+
 def locate_configuration_file() -> Path:
-    """Locate application configuration."""
+    """Locate the MyVCS application configuration file.
+
+    Resolution order:
+    1. MYVCS_CONFIG_FILE environment variable.
+    2. Project-level configuration/application.yaml.
+    3. /app/configuration/application.yaml for container deployments.
+    """
 
     configured_path = os.getenv("MYVCS_CONFIG_FILE")
 
     if configured_path:
-        return Path(configured_path)
+        return Path(configured_path).expanduser().resolve()
 
-    return (
+    project_root = Path(__file__).resolve().parents[3]
+
+    project_configuration_file = (
+        project_root
+        / CONFIGURATION_DIRECTORY_NAME
+        / APPLICATION_CONFIG_FILE_NAME
+    )
+
+    if project_configuration_file.is_file():
+        return project_configuration_file
+
+    container_configuration_file = (
         Path("/app")
         / CONFIGURATION_DIRECTORY_NAME
         / APPLICATION_CONFIG_FILE_NAME
     )
 
+    return container_configuration_file
 
 def load_configuration() -> ApplicationConfig:
     """Load configuration from YAML."""

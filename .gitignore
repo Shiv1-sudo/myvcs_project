@@ -42,3 +42,5 @@ logs/
 *.tfstate.*
 crash.log
 crash.*.log
+myvcs-backup/
+test.txt
