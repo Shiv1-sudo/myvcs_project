@@ -8,22 +8,17 @@ from myvcs.common.application_config import (
     ApplicationConfig,
     load_configuration,
 )
-from myvcs.common.application_exceptions import (
-    MyVCSError,
-)
+from myvcs.common.application_exceptions import MyVCSError
 from myvcs.common.application_logging import (
     configure_logging,
     get_logger,
 )
 from myvcs.objects.blob_object import BlobObject
-from myvcs.references.reference_manager import (
-    ReferenceManager,
-)
+from myvcs.references.reference_manager import ReferenceManager
 from myvcs.repository.object_store import ObjectStore
-from myvcs.repository.repository_manager import (
-    RepositoryManager,
-)
+from myvcs.repository.repository_manager import RepositoryManager
 from myvcs.services.add_service import AddService
+from myvcs.services.backup_service import BackupService
 from myvcs.services.branch_service import BranchService
 from myvcs.services.checkout_service import CheckoutService
 from myvcs.services.clone_service import CloneService
@@ -34,9 +29,11 @@ from myvcs.services.garbage_collection_service import (
 )
 from myvcs.services.merge_service import MergeService
 from myvcs.services.remote_service import RemoteService
+from myvcs.services.restore_service import RestoreService
 from myvcs.services.status_service import StatusService
 from myvcs.services.tag_service import TagService
 from myvcs.storage.pack_file import PackFile
+
 
 LOGGER = get_logger(__name__)
 
@@ -46,10 +43,14 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="myvcs",
-        description=("Git-like version control system implemented in Python."),
+        description=(
+            "Git-like version control system implemented in Python."
+        ),
     )
 
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(
+        dest="command",
+    )
 
     # ---------------------------------------------------------
     # init
@@ -124,11 +125,13 @@ def create_parser() -> argparse.ArgumentParser:
         "-m",
         "--message",
         required=False,
+        help="Commit message.",
     )
 
     commit_parser.add_argument(
         "--author",
         required=False,
+        help="Commit author.",
     )
 
     # ---------------------------------------------------------
@@ -298,6 +301,34 @@ def create_parser() -> argparse.ArgumentParser:
         help="Create a pack file.",
     )
 
+    # ---------------------------------------------------------
+    # backup
+    # ---------------------------------------------------------
+
+    backup_parser = subparsers.add_parser(
+        "backup",
+        help="Create a backup of the repository.",
+    )
+
+    backup_parser.add_argument(
+        "destination",
+        help="Backup destination path.",
+    )
+
+    # ---------------------------------------------------------
+    # restore
+    # ---------------------------------------------------------
+
+    restore_parser = subparsers.add_parser(
+        "restore",
+        help="Restore the repository from a backup.",
+    )
+
+    restore_parser.add_argument(
+        "backup",
+        help="Backup path.",
+    )
+
     return parser
 
 
@@ -308,7 +339,10 @@ def handle_init(
 
     repository.initialize()
 
-    print(f"Initialized empty MyVCS repository in {repository.metadata_directory}")
+    print(
+        "Initialized empty MyVCS repository "
+        f"in {repository.metadata_directory}"
+    )
 
 
 def handle_hash_object(
@@ -320,10 +354,14 @@ def handle_hash_object(
 
     repository.require_repository()
 
-    source_path = (repository.working_directory / file_path).resolve()
+    source_path = (
+        repository.working_directory / file_path
+    ).resolve()
 
     if not source_path.is_file():
-        raise MyVCSError(f"File does not exist: {file_path}")
+        raise MyVCSError(
+            f"File does not exist: {file_path}"
+        )
 
     data = source_path.read_bytes()
 
@@ -382,11 +420,9 @@ def handle_add(
 
     object_id = service.add(file_path)
 
-    print(f"Staged {file_path} ({object_id})")
-
-
-##################################################old
-############################################
+    print(
+        f"Staged {file_path} ({object_id})"
+    )
 
 
 def handle_status(
@@ -412,7 +448,6 @@ def handle_status(
     branch = reference_manager.current_branch()
 
     print(f"On branch {branch}")
-
     print()
 
     if status["staged"]:
@@ -466,14 +501,20 @@ def handle_commit(
 
     repository.require_repository()
 
-    commit_message = message or configuration.require(
-        "commit",
-        "default_message",
+    commit_message = (
+        message
+        or configuration.require(
+            "commit",
+            "default_message",
+        )
     )
 
-    commit_author = author or configuration.require(
-        "commit",
-        "default_author",
+    commit_author = (
+        author
+        or configuration.require(
+            "commit",
+            "default_author",
+        )
     )
 
     service = CommitService(
@@ -486,7 +527,9 @@ def handle_commit(
         author=commit_author,
     )
 
-    print(f"[{commit_id}] {commit_message}")
+    print(
+        f"[{commit_id}] {commit_message}"
+    )
 
 
 def handle_log(
@@ -522,7 +565,6 @@ def handle_log(
         )
 
         print(f"commit {commit_id}")
-
         print(decoded)
         print()
 
@@ -530,7 +572,9 @@ def handle_log(
 
         for line in decoded.splitlines():
             if line.startswith("parent "):
-                parent_id = line.removeprefix("parent ")
+                parent_id = line.removeprefix(
+                    "parent "
+                )
                 break
 
         commit_id = parent_id
@@ -574,7 +618,9 @@ def handle_branch(
     if branch_name:
         service.create_branch(branch_name)
 
-        print(f"Created branch '{branch_name}'.")
+        print(
+            f"Created branch '{branch_name}'."
+        )
 
         return
 
@@ -583,12 +629,18 @@ def handle_branch(
         configuration=configuration,
     )
 
-    current_branch = reference_manager.current_branch()
+    current_branch = (
+        reference_manager.current_branch()
+    )
 
     branches = service.list_branches()
 
     for branch in branches:
-        marker = "*" if branch == current_branch else " "
+        marker = (
+            "*"
+            if branch == current_branch
+            else " "
+        )
 
         print(f"{marker} {branch}")
 
@@ -609,7 +661,9 @@ def handle_checkout(
 
     service.checkout(branch_name)
 
-    print(f"Switched to branch '{branch_name}'.")
+    print(
+        f"Switched to branch '{branch_name}'."
+    )
 
 
 def handle_merge(
@@ -628,7 +682,9 @@ def handle_merge(
 
     commit_id = service.merge(branch_name)
 
-    print(f"Merged '{branch_name}' at {commit_id}.")
+    print(
+        f"Merged '{branch_name}' at {commit_id}."
+    )
 
 
 def handle_tag(
@@ -648,7 +704,9 @@ def handle_tag(
     if tag_name:
         service.create_tag(tag_name)
 
-        print(f"Created tag '{tag_name}'.")
+        print(
+            f"Created tag '{tag_name}'."
+        )
 
         return
 
@@ -676,7 +734,9 @@ def _current_branch(
     branch = references.current_branch()
 
     if not branch:
-        raise MyVCSError("Unable to determine current branch.")
+        raise MyVCSError(
+            "Unable to determine current branch."
+        )
 
     return branch
 
@@ -691,9 +751,12 @@ def handle_push(
 
     repository.require_repository()
 
-    branch = branch_name or _current_branch(
-        repository,
-        configuration,
+    branch = (
+        branch_name
+        or _current_branch(
+            repository,
+            configuration,
+        )
     )
 
     service = RemoteService(
@@ -706,7 +769,10 @@ def handle_push(
         branch_name=branch,
     )
 
-    print(f"Pushed branch '{branch}' to '{remote_path}'.")
+    print(
+        f"Pushed branch '{branch}' "
+        f"to '{remote_path}'."
+    )
 
 
 def handle_fetch(
@@ -723,9 +789,13 @@ def handle_fetch(
         configuration=configuration,
     )
 
-    service.fetch(remote_path=remote_path)
+    service.fetch(
+        remote_path=remote_path,
+    )
 
-    print(f"Fetched from '{remote_path}'.")
+    print(
+        f"Fetched from '{remote_path}'."
+    )
 
 
 def handle_pull(
@@ -738,9 +808,12 @@ def handle_pull(
 
     repository.require_repository()
 
-    branch = branch_name or _current_branch(
-        repository,
-        configuration,
+    branch = (
+        branch_name
+        or _current_branch(
+            repository,
+            configuration,
+        )
     )
 
     service = RemoteService(
@@ -753,7 +826,10 @@ def handle_pull(
         branch_name=branch,
     )
 
-    print(f"Pulled branch '{branch}' from '{remote_path}'.")
+    print(
+        f"Pulled branch '{branch}' "
+        f"from '{remote_path}'."
+    )
 
 
 def handle_clone(
@@ -772,7 +848,10 @@ def handle_clone(
         destination_path=destination_path,
     )
 
-    print(f"Cloned '{remote_path}' to '{destination_path}'.")
+    print(
+        f"Cloned '{remote_path}' "
+        f"to '{destination_path}'."
+    )
 
 
 def handle_gc(
@@ -790,7 +869,10 @@ def handle_gc(
 
     removed = service.collect()
 
-    print(f"Garbage collection complete. Removed {removed} object(s).")
+    print(
+        "Garbage collection complete. "
+        f"Removed {removed} object(s)."
+    )
 
 
 def handle_pack(
@@ -809,7 +891,10 @@ def handle_pack(
     )
 
     if not pack_directory.is_absolute():
-        pack_directory = repository.metadata_directory / pack_directory
+        pack_directory = (
+            repository.metadata_directory
+            / pack_directory
+        )
 
     pack_name = configuration.require(
         "pack",
@@ -826,10 +911,14 @@ def handle_pack(
             if not object_file.is_file():
                 continue
 
-            object_id = directory.name + object_file.name
+            object_id = (
+                directory.name
+                + object_file.name
+            )
 
             try:
                 raw_data = object_file.read_bytes()
+
             except OSError:
                 LOGGER.warning(
                     "Unable to read object: %s",
@@ -840,7 +929,9 @@ def handle_pack(
             objects[object_id] = raw_data
 
     if not objects:
-        print("No objects available to pack.")
+        print(
+            "No objects available to pack."
+        )
         return
 
     pack_file = PackFile(
@@ -856,6 +947,52 @@ def handle_pack(
     print(f"Pack created: {created}")
 
 
+def handle_backup(
+    repository: RepositoryManager,
+    configuration: ApplicationConfig,
+    destination_path: str,
+) -> None:
+    """Handle backup command."""
+
+    repository.require_repository()
+
+    service = BackupService(
+        repository=repository,
+        configuration=configuration,
+    )
+
+    backup_path = service.backup(
+        destination_path,
+    )
+
+    print(
+        f"Backup created: {backup_path}"
+    )
+
+
+def handle_restore(
+    repository: RepositoryManager,
+    configuration: ApplicationConfig,
+    backup_path: str,
+) -> None:
+    """Handle restore command."""
+
+    repository.require_repository()
+
+    service = RestoreService(
+        repository=repository,
+        configuration=configuration,
+    )
+
+    service.restore(
+        backup_path,
+    )
+
+    print(
+        f"Repository restored from '{backup_path}'."
+    )
+
+
 def main() -> int:
     """CLI application entry point."""
 
@@ -864,7 +1001,9 @@ def main() -> int:
     try:
         configuration = load_configuration()
 
-        configure_logging(configuration)
+        configure_logging(
+            configuration
+        )
 
         parser = create_parser()
 
@@ -995,6 +1134,20 @@ def main() -> int:
                 configuration,
             )
 
+        elif arguments.command == "backup":
+            handle_backup(
+                repository,
+                configuration,
+                arguments.destination,
+            )
+
+        elif arguments.command == "restore":
+            handle_restore(
+                repository,
+                configuration,
+                arguments.backup,
+            )
+
         else:
             parser.print_help()
 
@@ -1023,10 +1176,13 @@ def main() -> int:
         return 1
 
     except Exception:
-        LOGGER.exception("Unexpected application error.")
+        LOGGER.exception(
+            "Unexpected application error."
+        )
 
         print(
-            "Unexpected application error. Check the log file.",
+            "Unexpected application error. "
+            "Check the log file.",
             file=sys.stderr,
         )
 
@@ -1037,3 +1193,8 @@ def main() -> int:
             )
 
         return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+ 

@@ -20,7 +20,14 @@ class CommitObject(VCSObject):
         message: str,
         author: str,
         configuration: ApplicationConfig,
+        timestamp: str | None = None,
     ):
+        self.tree_id = tree_id
+        self.parent_id = parent_id
+        self.message = message
+        self.author = author
+        self.timestamp = timestamp or datetime.now(UTC).isoformat()
+
         lines = [
             f"tree {tree_id}",
         ]
@@ -28,12 +35,10 @@ class CommitObject(VCSObject):
         if parent_id:
             lines.append(f"parent {parent_id}")
 
-        timestamp = datetime.now(UTC).isoformat()
-
         lines.extend(
             [
                 f"author {author}",
-                f"timestamp {timestamp}",
+                f"timestamp {self.timestamp}",
                 "",
                 message,
             ]
@@ -130,15 +135,14 @@ class CommitObject(VCSObject):
 
             message = "\n".join(message_lines)
 
-            commit = cls(
+            return cls(
                 tree_id=tree_id,
                 parent_id=parent_id,
                 message=message,
                 author=author,
                 configuration=configuration,
+                timestamp=timestamp,
             )
-
-            return commit
 
         except ObjectError:
             raise
